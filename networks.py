@@ -93,7 +93,7 @@ class ResnetGenerator(nn.Module):
 
         cam_logit = torch.cat([gap_logit, gmp_logit], 1)
         x = torch.cat([gap, gmp], 1)
-        x = self.relu(self.conv1x1(x))
+        x = torch.Tensor(self.relu(self.conv1x1(x)))
 
         heatmap = torch.sum(x, dim=1, keepdim=True)
 

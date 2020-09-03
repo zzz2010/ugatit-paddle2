@@ -123,8 +123,8 @@ class UGATIT(object) :
         self.G_optim = torch.optim.Adam( self.genA2B.parameters()+self.genB2A.parameters()  , lr=self.lr, betas=(0.5, 0.999), weight_decay=self.weight_decay)
         self.D_optim = torch.optim.Adam( self.disGA.parameters()+self.disGB.parameters()+self.disLA.parameters()+self.disLB.parameters() , lr=self.lr, betas=(0.5, 0.999), weight_decay=self.weight_decay)
 
-        self.G_optim = fluid.contrib.mixed_precision.decorator.decorate(self.G_optim)
-        self.D_optim = fluid.contrib.mixed_precision.decorator.decorate(self.D_optim)
+        # self.G_optim = fluid.contrib.mixed_precision.decorator.decorate(self.G_optim)
+        # self.D_optim = fluid.contrib.mixed_precision.decorator.decorate(self.D_optim)
         """ Define Rho clipper to constraint the value of rho in AdaILN and ILN"""
         self.Rho_clipper = RhoClipper(0, 1)
 
