@@ -65,19 +65,28 @@ def main():
     if args is None:
       exit()
 
-    # open session
-    gan = UGATIT(args)
+    from paddle import fluid
+    if args.device=="cuda":
+        place = fluid.CUDAPlace(0)
+    else:
+        place = fluid.CPUPlace()
+    #
+    with fluid.dygraph.guard(place=place):
+        # open session
+        gan = UGATIT(args)
 
-    # build graph
-    gan.build_model()
+        # build graph
+        gan.build_model()
 
-    if args.phase == 'train' :
-        gan.train()
-        print(" [*] Training finished!")
+        if args.phase == 'train' :
+            gan.train()
+            print(" [*] Training finished!")
 
-    if args.phase == 'test' :
-        gan.test()
-        print(" [*] Test finished!")
+        if args.phase == 'test' :
+            gan.test()
+            print(" [*] Test finished!")
 
 if __name__ == '__main__':
+
+
     main()

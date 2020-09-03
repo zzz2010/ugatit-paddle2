@@ -1,10 +1,12 @@
 import time, itertools
 from dataset import ImageFolder
-from torchvision import transforms
-from torch.utils.data import DataLoader
+from paddorch.vision import transforms
+from paddorch.utils.data import DataLoader
 from networks import *
 from utils import *
 from glob import glob
+import paddorch as torch
+from paddle import fluid
 
 class UGATIT(object) :
     def __init__(self, args):
@@ -48,9 +50,7 @@ class UGATIT(object) :
         self.benchmark_flag = args.benchmark_flag
         self.resume = args.resume
 
-        if torch.backends.cudnn.enabled and self.benchmark_flag:
-            print('set benchmark !')
-            torch.backends.cudnn.benchmark = True
+
 
         print()
 
@@ -115,14 +115,16 @@ class UGATIT(object) :
         self.disLB = Discriminator(input_nc=3, ndf=self.ch, n_layers=5).to(self.device)
 
         """ Define Loss """
-        self.L1_loss = nn.L1Loss().to(self.device)
-        self.MSE_loss = nn.MSELoss().to(self.device)
-        self.BCE_loss = nn.BCEWithLogitsLoss().to(self.device)
+        self.L1_loss = nn.L1Loss()
+        self.MSE_loss = nn.MSELoss()
+        self.BCE_loss = nn.BCEWithLogitsLoss()
 
         """ Trainer """
-        self.G_optim = torch.optim.Adam(itertools.chain(self.genA2B.parameters(), self.genB2A.parameters()), lr=self.lr, betas=(0.5, 0.999), weight_decay=self.weight_decay)
-        self.D_optim = torch.optim.Adam(itertools.chain(self.disGA.parameters(), self.disGB.parameters(), self.disLA.parameters(), self.disLB.parameters()), lr=self.lr, betas=(0.5, 0.999), weight_decay=self.weight_decay)
+        self.G_optim = torch.optim.Adam( self.genA2B.parameters()+self.genB2A.parameters()  , lr=self.lr, betas=(0.5, 0.999), weight_decay=self.weight_decay)
+        self.D_optim = torch.optim.Adam( self.disGA.parameters()+self.disGB.parameters()+self.disLA.parameters()+self.disLB.parameters() , lr=self.lr, betas=(0.5, 0.999), weight_decay=self.weight_decay)
 
+        self.G_optim = fluid.contrib.mixed_precision.decorator.decorate(self.G_optim)
+        self.D_optim = fluid.contrib.mixed_precision.decorator.decorate(self.D_optim)
         """ Define Rho clipper to constraint the value of rho in AdaILN and ILN"""
         self.Rho_clipper = RhoClipper(0, 1)
 
@@ -131,7 +133,7 @@ class UGATIT(object) :
 
         start_iter = 1
         if self.resume:
-            model_list = glob(os.path.join(self.result_dir, self.dataset, 'model', '*.pt'))
+            model_list = glob(os.path.join(self.result_dir, self.dataset, 'model', '*.pdparams'))
             if not len(model_list) == 0:
                 model_list.sort()
                 start_iter = int(model_list[-1].split('_')[-1].split('.')[0])
@@ -161,10 +163,16 @@ class UGATIT(object) :
                 trainB_iter = iter(self.trainB_loader)
                 real_B, _ = trainB_iter.next()
 
-            real_A, real_B = real_A.to(self.device), real_B.to(self.device)
+            real_A=real_A[0]
+            real_B=real_B[0] ##some handling needed using paddle dataloader
+
 
             # Update D
-            self.D_optim.zero_grad()
+            if hasattr(self.D_optim, "_optimizer"):  # support meta optimizer
+                self.D_optim._optimizer.clear_gradients()
+            else:
+                self.D_optim.clear_gradients()
+
 
             fake_A2B, _, _ = self.genA2B(real_A)
             fake_B2A, _, _ = self.genB2A(real_B)
@@ -196,7 +204,11 @@ class UGATIT(object) :
             self.D_optim.step()
 
             # Update G
-            self.G_optim.zero_grad()
+            if hasattr(self.G_optim, "_optimizer"):  # support meta optimizer
+                self.G_optim._optimizer.clear_gradients()
+            else:
+                self.G_optim.clear_gradients()
+
 
             fake_A2B, fake_A2B_cam_logit, _ = self.genA2B(real_A)
             fake_B2A, fake_B2A_cam_logit, _ = self.genB2A(real_B)

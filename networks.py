@@ -1,6 +1,6 @@
-import torch
-import torch.nn as nn
-from torch.nn.parameter import Parameter
+import paddorch as torch
+import paddorch.nn as nn
+from paddorch.nn.parameter import Parameter
 
 
 class ResnetGenerator(nn.Module):
@@ -82,12 +82,12 @@ class ResnetGenerator(nn.Module):
         gap = torch.nn.functional.adaptive_avg_pool2d(x, 1)
         gap_logit = self.gap_fc(gap.view(x.shape[0], -1))
         gap_weight = list(self.gap_fc.parameters())[0]
-        gap = x * gap_weight.unsqueeze(2).unsqueeze(3)
+        gap = x * torch.Tensor(gap_weight).unsqueeze(2).unsqueeze(3)
 
         gmp = torch.nn.functional.adaptive_max_pool2d(x, 1)
         gmp_logit = self.gmp_fc(gmp.view(x.shape[0], -1))
         gmp_weight = list(self.gmp_fc.parameters())[0]
-        gmp = x * gmp_weight.unsqueeze(2).unsqueeze(3)
+        gmp = x * torch.Tensor(gmp_weight).unsqueeze(2).unsqueeze(3)
 
         cam_logit = torch.cat([gap_logit, gmp_logit], 1)
         x = torch.cat([gap, gmp], 1)
@@ -158,8 +158,8 @@ class adaILN(nn.Module):
     def __init__(self, num_features, eps=1e-5):
         super(adaILN, self).__init__()
         self.eps = eps
-        self.rho = Parameter(torch.Tensor(1, num_features, 1, 1))
-        self.rho.data.fill_(0.9)
+        self.rho = Parameter((1, num_features, 1, 1),0.9)
+
 
     def forward(self, input, gamma, beta):
         in_mean, in_var = torch.mean(input, dim=[2, 3], keepdim=True), torch.var(input, dim=[2, 3], keepdim=True)
@@ -176,12 +176,10 @@ class ILN(nn.Module):
     def __init__(self, num_features, eps=1e-5):
         super(ILN, self).__init__()
         self.eps = eps
-        self.rho = Parameter(torch.Tensor(1, num_features, 1, 1))
-        self.gamma = Parameter(torch.Tensor(1, num_features, 1, 1))
-        self.beta = Parameter(torch.Tensor(1, num_features, 1, 1))
-        self.rho.data.fill_(0.0)
-        self.gamma.data.fill_(1.0)
-        self.beta.data.fill_(0.0)
+        self.rho = Parameter((1, num_features, 1, 1),0.0)
+        self.gamma = Parameter( (1, num_features, 1, 1),1.0)
+        self.beta = Parameter((1, num_features, 1, 1),0.0)
+
 
     def forward(self, input):
         in_mean, in_var = torch.mean(input, dim=[2, 3], keepdim=True), torch.var(input, dim=[2, 3], keepdim=True)
@@ -255,14 +253,14 @@ class Discriminator(nn.Module):
 
 class RhoClipper(object):
 
-    def __init__(self, min, max):
-        self.clip_min = min
-        self.clip_max = max
-        assert min < max
+    def __init__(self, clip_min, clip_max):
+        self.clip_min = clip_min
+        self.clip_max = clip_max
+        assert clip_min < clip_max
 
     def __call__(self, module):
+        if hasattr(module, "rho"):
+            w = torch.Tensor(module.rho)
+            w = w.clamp_(self.clip_min, self.clip_max)
+            module.rho = w
 
-        if hasattr(module, 'rho'):
-            w = module.rho.data
-            w = w.clamp(self.clip_min, self.clip_max)
-            module.rho.data = w

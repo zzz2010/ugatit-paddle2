@@ -1,7 +1,7 @@
-import torch.utils.data as data
+import paddorch.utils.data as data
 
 from PIL import Image
-
+from paddorch.vision.datasets import  cv2_loader
 import os
 import os.path
 
@@ -69,7 +69,7 @@ class DatasetFolder(data.Dataset):
         if self.target_transform is not None:
             target = self.target_transform(target)
 
-        return sample, target
+        return [sample, target]
 
     def __len__(self):
         return len(self.samples)
@@ -96,7 +96,7 @@ def pil_loader(path):
 
 
 def default_loader(path):
-    return pil_loader(path)
+    return cv2_loader(path)
 
 
 class ImageFolder(DatasetFolder):
@@ -106,3 +106,4 @@ class ImageFolder(DatasetFolder):
                                           transform=transform,
                                           target_transform=target_transform)
         self.imgs = self.samples
+
