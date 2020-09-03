@@ -17,7 +17,7 @@ class ResnetGenerator(nn.Module):
         DownBlock = []
         DownBlock += [nn.ReflectionPad2d(3),
                       nn.Conv2d(input_nc, ngf, kernel_size=7, stride=1, padding=0, bias=False),
-                      nn.InstanceNorm2d(ngf),
+                      nn.InstanceNorm2d(ngf,affine=True),
                       nn.ReLU(True)]
 
         # Down-Sampling
@@ -26,7 +26,7 @@ class ResnetGenerator(nn.Module):
             mult = 2**i
             DownBlock += [nn.ReflectionPad2d(1),
                           nn.Conv2d(ngf * mult, ngf * mult * 2, kernel_size=3, stride=2, padding=0, bias=False),
-                          nn.InstanceNorm2d(ngf * mult * 2),
+                          nn.InstanceNorm2d(ngf * mult * 2,affine=True),
                           nn.ReLU(True)]
 
         # Down-Sampling Bottleneck
@@ -116,12 +116,12 @@ class ResnetBlock(nn.Module):
         conv_block = []
         conv_block += [nn.ReflectionPad2d(1),
                        nn.Conv2d(dim, dim, kernel_size=3, stride=1, padding=0, bias=use_bias),
-                       nn.InstanceNorm2d(dim),
+                       nn.InstanceNorm2d(dim,affine=True),
                        nn.ReLU(True)]
 
         conv_block += [nn.ReflectionPad2d(1),
                        nn.Conv2d(dim, dim, kernel_size=3, stride=1, padding=0, bias=use_bias),
-                       nn.InstanceNorm2d(dim)]
+                       nn.InstanceNorm2d(dim,affine=True)]
 
         self.conv_block = nn.Sequential(*conv_block)
 
