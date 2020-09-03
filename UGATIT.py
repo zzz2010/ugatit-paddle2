@@ -148,8 +148,8 @@ class UGATIT(object) :
         start_time = time.time()
         for step in range(start_iter, self.iteration + 1):
             if self.decay_flag and step > (self.iteration // 2):
-                self.G_optim.param_groups[0]['lr'] -= (self.lr / (self.iteration // 2))
-                self.D_optim.param_groups[0]['lr'] -= (self.lr / (self.iteration // 2))
+                self.G_optim._learning_rate -= (self.lr / (self.iteration // 2))
+                self.D_optim._learning_rate -= (self.lr / (self.iteration // 2))
 
             try:
                 real_A, _ = trainA_iter.next()
@@ -201,7 +201,7 @@ class UGATIT(object) :
 
             Discriminator_loss = D_loss_A + D_loss_B
             Discriminator_loss.backward()
-            self.D_optim.step()
+            self.D_optim.minimize(Discriminator_loss)
 
             # Update G
             if hasattr(self.G_optim, "_optimizer"):  # support meta optimizer
@@ -247,11 +247,12 @@ class UGATIT(object) :
 
             Generator_loss = G_loss_A + G_loss_B
             Generator_loss.backward()
-            self.G_optim.step()
+            self.G_optim.minimize(Generator_loss)
 
             # clip parameter of AdaILN and ILN, applied after optimizer step
-            self.genA2B.apply(self.Rho_clipper)
-            self.genB2A.apply(self.Rho_clipper)
+
+            self.Rho_clipper(self.genA2B)
+            self.Rho_clipper(self.genB2A)
 
             print("[%5d/%5d] time: %4.4f d_loss: %.8f, g_loss: %.8f" % (step, self.iteration, time.time() - start_time, Discriminator_loss, Generator_loss))
             if step % self.print_freq == 0:
