@@ -55,8 +55,10 @@ class ResnetGenerator(nn.Module):
         self.beta = nn.Linear(ngf * mult, ngf * mult, bias=False)
 
         # Up-Sampling Bottleneck
+        self.UpBlock1_list=nn.ModuleList()
         for i in range(n_blocks):
-            setattr(self, 'UpBlock1_' + str(i+1), ResnetAdaILNBlock(ngf * mult, use_bias=False))
+            self.UpBlock1_list.append(ResnetAdaILNBlock(ngf * mult, use_bias=False))
+            # setattr(self, 'UpBlock1_' + str(i+1), ResnetAdaILNBlock(ngf * mult, use_bias=False))
 
         # Up-Sampling
         UpBlock2 = []
@@ -104,7 +106,7 @@ class ResnetGenerator(nn.Module):
 
 
         for i in range(self.n_blocks):
-            x = getattr(self, 'UpBlock1_' + str(i+1))(x, gamma, beta)
+            x =self.UpBlock1_list[i](x, gamma, beta)
         out = self.UpBlock2(x)
 
         return out, cam_logit, heatmap
@@ -162,12 +164,22 @@ class adaILN(nn.Module):
 
 
     def forward(self, input, gamma, beta):
+
         in_mean, in_var = torch.mean(input, dim=[2, 3], keepdim=True), torch.var(input, dim=[2, 3], keepdim=True)
         out_in = (input - in_mean) / torch.sqrt(in_var + self.eps)
         ln_mean, ln_var = torch.mean(input, dim=[1, 2, 3], keepdim=True), torch.var(input, dim=[1, 2, 3], keepdim=True)
         out_ln = (input - ln_mean) / torch.sqrt(ln_var + self.eps)
+
+        # from paddle import fluid
+        # sizes=(input.shape[0], -1, -1, -1)
+        # expand_times = [x // y if x >= y else 1 for x, y in zip(sizes, input.shape)]
+        # rho_expand=fluid.layers.expand(self.rho, expand_times )
+        # out=rho_expand* out_in +(1-rho_expand)* out_ln
+        # out=out * fluid.layers.unsqueeze(fluid.layers.unsqueeze(gamma,2),3)+fluid.layers.unsqueeze(fluid.layers.unsqueeze(beta,2),3)
+
         out = self.rho.expand(input.shape[0], -1, -1, -1) * out_in + (1-self.rho.expand(input.shape[0], -1, -1, -1)) * out_ln
         out = out * torch.Tensor(gamma).unsqueeze(2).unsqueeze(3) + torch.Tensor(beta).unsqueeze(2).unsqueeze(3)
+
 
         return out
 
