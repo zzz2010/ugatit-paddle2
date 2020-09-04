@@ -405,7 +405,8 @@ class UGATIT(object) :
                 self.genA2B.train(), self.genB2A.train(), self.disGA.train(), self.disGB.train(), self.disLA.train(), self.disLB.train()
 
             if step % self.save_freq == 0:
-                self.save(os.path.join(self.result_dir, self.dataset, 'model'), step)
+                if (not self.is_parallel) or  fluid.dygraph.parallel.Env().local_rank == 0 :
+                    self.save(os.path.join(self.result_dir, self.dataset, 'model'), step)
 
             if step % 1000 == 0:
                 params = {}
@@ -415,7 +416,8 @@ class UGATIT(object) :
                 params['disGB'] = self.disGB.state_dict()
                 params['disLA'] = self.disLA.state_dict()
                 params['disLB'] = self.disLB.state_dict()
-                torch.save(params, os.path.join(self.result_dir, self.dataset + '_params_latest.pt'))
+                if (not self.is_parallel) or fluid.dygraph.parallel.Env().local_rank == 0:
+                    torch.save(params, os.path.join(self.result_dir, self.dataset + '_params_latest.pt'))
 
     def save(self, dir, step):
         params = {}

@@ -64,7 +64,7 @@ def main():
 
     from paddle import fluid
     if args.device=="cuda":
-        place = fluid.CUDAPlace(0)
+        place = fluid.CUDAPlace(fluid.dygraph.parallel.Env().dev_id)
     else:
         place = fluid.CPUPlace()
     #
