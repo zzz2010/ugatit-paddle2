@@ -61,7 +61,7 @@ def denorm(x):
     return x * 0.5 + 0.5
 
 def tensor2numpy(x):
-    return x.detach().cpu().numpy().transpose(1,2,0)
+    return x.detach().numpy().transpose(1,2,0)
 
 def RGB2BGR(x):
     return cv2.cvtColor(x, cv2.COLOR_RGB2BGR)
