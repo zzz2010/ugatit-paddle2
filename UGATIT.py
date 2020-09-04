@@ -123,12 +123,12 @@ class UGATIT(object) :
             self.testB_loader = DataLoader(self.testB, batch_size=1, shuffle=False )
 
         """ Define Generator, Discriminator """
-        self.genA2B = ResnetGenerator(input_nc=3, output_nc=3, ngf=self.ch, n_blocks=self.n_res, img_size=self.img_size, light=self.light).to(self.device)
-        self.genB2A = ResnetGenerator(input_nc=3, output_nc=3, ngf=self.ch, n_blocks=self.n_res, img_size=self.img_size, light=self.light).to(self.device)
-        self.disGA = Discriminator(input_nc=3, ndf=self.ch, n_layers=7).to(self.device)
-        self.disGB = Discriminator(input_nc=3, ndf=self.ch, n_layers=7).to(self.device)
-        self.disLA = Discriminator(input_nc=3, ndf=self.ch, n_layers=5).to(self.device)
-        self.disLB = Discriminator(input_nc=3, ndf=self.ch, n_layers=5).to(self.device)
+        self.genA2B = ResnetGenerator(input_nc=3, output_nc=3, ngf=self.ch, n_blocks=self.n_res, img_size=self.img_size, light=self.light)
+        self.genB2A = ResnetGenerator(input_nc=3, output_nc=3, ngf=self.ch, n_blocks=self.n_res, img_size=self.img_size, light=self.light)
+        self.disGA = Discriminator(input_nc=3, ndf=self.ch, n_layers=7)
+        self.disGB = Discriminator(input_nc=3, ndf=self.ch, n_layers=7)
+        self.disLA = Discriminator(input_nc=3, ndf=self.ch, n_layers=5)
+        self.disLB = Discriminator(input_nc=3, ndf=self.ch, n_layers=5)
 
         if self.is_parallel:
             from paddle.fluid.dygraph import DataParallel
@@ -313,7 +313,7 @@ class UGATIT(object) :
                     except:
                         trainB_iter = iter(self.trainB_loader)
                         real_B, _ = trainB_iter.next()
-                    real_A, real_B = real_A.to(self.device), real_B.to(self.device)
+
 
                     fake_A2B, _, fake_A2B_heatmap = self.genA2B(real_A)
                     fake_B2A, _, fake_B2A_heatmap = self.genB2A(real_B)
@@ -352,7 +352,7 @@ class UGATIT(object) :
                     except:
                         testB_iter = iter(self.testB_loader)
                         real_B, _ = testB_iter.next()
-                    real_A, real_B = real_A.to(self.device), real_B.to(self.device)
+                    real_A, real_B = real_A[0], real_B[0]
 
                     fake_A2B, _, fake_A2B_heatmap = self.genA2B(real_A)
                     fake_B2A, _, fake_B2A_heatmap = self.genB2A(real_B)
@@ -428,7 +428,7 @@ class UGATIT(object) :
 
         self.genA2B.eval(), self.genB2A.eval()
         for n, (real_A, _) in enumerate(self.testA_loader):
-            real_A = real_A.to(self.device)
+            real_A = real_A[0]
 
             fake_A2B, _, fake_A2B_heatmap = self.genA2B(real_A)
 
@@ -447,7 +447,7 @@ class UGATIT(object) :
             cv2.imwrite(os.path.join(self.result_dir, self.dataset, 'test', 'A2B_%d.png' % (n + 1)), A2B * 255.0)
 
         for n, (real_B, _) in enumerate(self.testB_loader):
-            real_B = real_B.to(self.device)
+            real_B = real_B[0]
 
             fake_B2A, _, fake_B2A_heatmap = self.genB2A(real_B)
 
