@@ -156,7 +156,7 @@ class UGATIT(object) :
         self.Rho_clipper = RhoClipper(0, 1)
 
     def train(self):
-        if not is_parallel:
+        if not self.is_parallel:
             writer=LogWriter(logdir=self.result_dir+"/log/")
         self.genA2B.train(), self.genB2A.train(), self.disGA.train(), self.disGB.train(), self.disLA.train(), self.disLB.train()
 
@@ -296,7 +296,7 @@ class UGATIT(object) :
 
             self.Rho_clipper(self.genA2B)
             self.Rho_clipper(self.genB2A)
-            if not is_parallel:
+            if not self.is_parallel:
                 writer.add_scalar(tag="G/G_loss_A", step=step, value=G_loss_A.numpy())
                 writer.add_scalar(tag="G/G_loss_B", step=step, value=G_loss_B.numpy())
                 writer.add_scalar(tag="D/D_loss_A", step=step, value=D_loss_A.numpy())
