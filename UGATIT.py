@@ -156,7 +156,7 @@ class UGATIT(object) :
         self.Rho_clipper = RhoClipper(0, 1)
 
     def train(self):
-        writer=LogWriter(logdir=args.result_dir+"/log/")
+        writer=LogWriter(logdir=self.result_dir+"/log/")
         self.genA2B.train(), self.genB2A.train(), self.disGA.train(), self.disGB.train(), self.disLA.train(), self.disLB.train()
 
         start_iter = 1
