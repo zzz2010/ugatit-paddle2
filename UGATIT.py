@@ -332,7 +332,7 @@ class UGATIT(object) :
                         trainB_iter = iter(self.trainB_loader)
                         real_B, _ = trainB_iter.next()
 
-
+                    real_A,real_B=real_A[0],real_B[0]
                     fake_A2B, _, fake_A2B_heatmap = self.genA2B(real_A)
                     fake_B2A, _, fake_B2A_heatmap = self.genB2A(real_B)
 
