@@ -139,7 +139,7 @@ class ResnetGenerator(nn.Module):
                   nn.Linear(ngf*4, ngf*4, bias=False),
                   nn.ReLU(True)]
         else:
-            fc = [nn.Linear(img_size * img_size * 16, ngf*4, bias=False),
+            fc = [nn.Linear(img_size * img_size * ngf//4, ngf*4, bias=False),
                   nn.ReLU(True),
                   nn.Linear(ngf*4, ngf*4, bias=False),
                   nn.ReLU(True)]
