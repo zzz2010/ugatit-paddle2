@@ -162,10 +162,13 @@ class UGATIT(object) :
 
         start_iter = 1
         if self.resume:
-            model_list = glob(os.path.join(self.result_dir, self.dataset, 'model', '*.pdparams'))
+            print(self.result_dir, self.dataset ,os.path.join(self.result_dir, self.dataset, 'model', '*.pt'))
+            model_list = glob(os.path.join(self.result_dir, self.dataset, 'model', '*.pt'))
+            print("resuming, model_list",model_list)
             if not len(model_list) == 0:
                 model_list.sort()
                 start_iter = int(model_list[-1].split('_')[-1].split('.')[0])
+                print("resuming, start_iter",start_iter)
                 self.load(os.path.join(self.result_dir, self.dataset, 'model'), start_iter)
                 print(" [*] Load SUCCESS")
                 if self.decay_flag and start_iter > (self.iteration // 2):
