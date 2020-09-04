@@ -73,12 +73,12 @@ class Discriminator(nn.Module):
         gap = porch.nn.functional.adaptive_avg_pool2d(x, 1)
         gap_logit = self.gap_fc(gap.view(x.shape[0], -1))
         gap_weight = list(self.gap_fc.parameters())[0]
-        gap = x * porch.Tensor(gap_weight).unsqueeze(2).unsqueeze(3)
+        gap = x * porch.Tensor(gap_weight).unsqueeze(0).unsqueeze(3)
 
         gmp = porch.nn.functional.adaptive_max_pool2d(x, 1)
         gmp_logit = self.gmp_fc(gmp.view(x.shape[0], -1))
         gmp_weight = list(self.gmp_fc.parameters())[0]
-        gmp = x * porch.Tensor(gmp_weight).unsqueeze(2).unsqueeze(3)
+        gmp = x * porch.Tensor(gmp_weight).unsqueeze(0).unsqueeze(3)
 
         cam_logit = porch.cat([gap_logit, gmp_logit], 1)
         x = porch.cat([gap, gmp], 1)
