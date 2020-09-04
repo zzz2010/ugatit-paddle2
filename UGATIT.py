@@ -156,7 +156,8 @@ class UGATIT(object) :
         self.Rho_clipper = RhoClipper(0, 1)
 
     def train(self):
-        writer=LogWriter(logdir=self.result_dir+"/log/")
+        if not is_parallel:
+            writer=LogWriter(logdir=self.result_dir+"/log/")
         self.genA2B.train(), self.genB2A.train(), self.disGA.train(), self.disGB.train(), self.disLA.train(), self.disLB.train()
 
         start_iter = 1
@@ -295,20 +296,20 @@ class UGATIT(object) :
 
             self.Rho_clipper(self.genA2B)
             self.Rho_clipper(self.genB2A)
+            if not is_parallel:
+                writer.add_scalar(tag="G/G_loss_A", step=step, value=G_loss_A.numpy())
+                writer.add_scalar(tag="G/G_loss_B", step=step, value=G_loss_B.numpy())
+                writer.add_scalar(tag="D/D_loss_A", step=step, value=D_loss_A.numpy())
+                writer.add_scalar(tag="D/D_loss_B", step=step, value=D_loss_B.numpy())
+                writer.add_scalar(tag="D/Discriminator_loss", step=step, value=Discriminator_loss.numpy())
+                writer.add_scalar(tag="D/Generator_loss", step=step, value=Generator_loss.numpy())
 
-            writer.add_scalar(tag="G/G_loss_A", step=step, value=G_loss_A.numpy())
-            writer.add_scalar(tag="G/G_loss_B", step=step, value=G_loss_B.numpy())
-            writer.add_scalar(tag="D/D_loss_A", step=step, value=D_loss_A.numpy())
-            writer.add_scalar(tag="D/D_loss_B", step=step, value=D_loss_B.numpy())
-            writer.add_scalar(tag="D/Discriminator_loss", step=step, value=Discriminator_loss.numpy())
-            writer.add_scalar(tag="D/Generator_loss", step=step, value=Generator_loss.numpy())
+                if step%10==9:
 
-       
-
-            writer.add_image("fake_A2B", (porch.Tensor(fake_A2B[0]*255)).clamp_(0, 255).numpy().transpose([1,2,0]).astype(np.uint8), step )
-            writer.add_image("fake_B2A", (porch.Tensor(fake_B2A[0]*255)).clamp_(0, 255).numpy().transpose([1,2,0]).astype(np.uint8),step )
-            writer.add_image("fake_A2B2A", (porch.Tensor(fake_A2B[0]*255)).clamp_(0, 255).numpy().transpose([1,2,0]).astype(np.uint8), step )
-            writer.add_image("fake_B2A2B", (porch.Tensor(fake_B2A[0]*255)).clamp_(0, 255).numpy().transpose([1,2,0]).astype(np.uint8),step )
+                    writer.add_image("fake_A2B", (porch.Tensor(fake_A2B[0]*255)).clamp_(0, 255).numpy().transpose([1,2,0]).astype(np.uint8), step )
+                    writer.add_image("fake_B2A", (porch.Tensor(fake_B2A[0]*255)).clamp_(0, 255).numpy().transpose([1,2,0]).astype(np.uint8),step )
+                    writer.add_image("fake_A2B2A", (porch.Tensor(fake_A2B[0]*255)).clamp_(0, 255).numpy().transpose([1,2,0]).astype(np.uint8), step )
+                    writer.add_image("fake_B2A2B", (porch.Tensor(fake_B2A[0]*255)).clamp_(0, 255).numpy().transpose([1,2,0]).astype(np.uint8),step )
             
             print("[%5d/%5d] time: %4.4f d_loss: %.8f, g_loss: %.8f" % (step, self.iteration, time.time() - start_time, Discriminator_loss, Generator_loss))
             if step % self.print_freq == 0:
