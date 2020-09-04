@@ -11,7 +11,12 @@ from paddle import fluid
 class UGATIT(object) :
     def __init__(self, args):
         self.light = args.light
-
+        self.is_parallel=args.parallel
+        if self.is_parallel:
+            self.strategy=fluid.dygraph.prepare_context()
+            if self.strategy is None:
+                print("Parallel not success,change to single mode")
+                self.is_parallel=False
         if self.light :
             self.model_name = 'UGATIT_light'
         else :
@@ -101,10 +106,21 @@ class UGATIT(object) :
         self.trainB = ImageFolder(os.path.join('dataset', self.dataset, 'trainB'), train_transform)
         self.testA = ImageFolder(os.path.join('dataset', self.dataset, 'testA'), test_transform)
         self.testB = ImageFolder(os.path.join('dataset', self.dataset, 'testB'), test_transform)
-        self.trainA_loader = DataLoader(self.trainA, batch_size=self.batch_size, shuffle=True)
-        self.trainB_loader = DataLoader(self.trainB, batch_size=self.batch_size, shuffle=True)
-        self.testA_loader = DataLoader(self.testA, batch_size=1, shuffle=False)
-        self.testB_loader = DataLoader(self.testB, batch_size=1, shuffle=False)
+        if self.is_parallel:
+            from paddorch.utils.data.sampler import DistributedBatchSampler
+            batch_sampler_trainA=DistributedBatchSampler(     self.trainA,self.batch_size)
+            batch_sampler_trainB = DistributedBatchSampler(self.trainB, self.batch_size)
+            batch_sampler_testA= DistributedBatchSampler(     self.testA,self.batch_size)
+            batch_sampler_testB = DistributedBatchSampler(self.testB, self.batch_size)
+            self.trainA_loader = DataLoader(self.trainA, batch_size=1,batch_sampler=batch_sampler_trainA)
+            self.trainB_loader = DataLoader(self.trainB ,batch_size=1,batch_sampler=batch_sampler_trainB)
+            self.testA_loader = DataLoader(self.testA ,batch_size=1,batch_sampler=batch_sampler_testA)
+            self.testB_loader = DataLoader(self.testB ,batch_size=1,batch_sampler=batch_sampler_testB)
+        else:
+            self.trainA_loader = DataLoader(self.trainA, batch_size=self.batch_size, shuffle=True )
+            self.trainB_loader = DataLoader(self.trainB, batch_size=self.batch_size, shuffle=True )
+            self.testA_loader = DataLoader(self.testA, batch_size=1, shuffle=False )
+            self.testB_loader = DataLoader(self.testB, batch_size=1, shuffle=False )
 
         """ Define Generator, Discriminator """
         self.genA2B = ResnetGenerator(input_nc=3, output_nc=3, ngf=self.ch, n_blocks=self.n_res, img_size=self.img_size, light=self.light).to(self.device)
@@ -113,6 +129,15 @@ class UGATIT(object) :
         self.disGB = Discriminator(input_nc=3, ndf=self.ch, n_layers=7).to(self.device)
         self.disLA = Discriminator(input_nc=3, ndf=self.ch, n_layers=5).to(self.device)
         self.disLB = Discriminator(input_nc=3, ndf=self.ch, n_layers=5).to(self.device)
+
+        if self.is_parallel:
+            from paddle.fluid.dygraph import DataParallel
+            self.genA2B=DataParallel(self.genA2B,self.strategy)
+            self.genB2A = DataParallel(self.genB2A,self.strategy)
+            self.disGA = DataParallel(self.disGA,self.strategy)
+            self.disGB = DataParallel(self.disGB,self.strategy)
+            self.disLA = DataParallel (self.disLA,self.strategy)
+            self.disLB = DataParallel(self.disLB,self.strategy)
 
         """ Define Loss """
         self.L1_loss = nn.L1Loss()
@@ -201,6 +226,13 @@ class UGATIT(object) :
 
             Discriminator_loss = D_loss_A + D_loss_B
             Discriminator_loss.backward()
+            if self.is_parallel:
+                self.disGA.apply_collective_grads()
+                self.disGB.apply_collective_grads()
+                self.disLA.apply_collective_grads()
+                self.disLB.apply_collective_grads()
+                self.genA2B.apply_collective_grads()
+                self.genB2A.apply_collective_grads()
             self.D_optim.minimize(Discriminator_loss)
 
             # Update G
@@ -247,6 +279,13 @@ class UGATIT(object) :
 
             Generator_loss = G_loss_A + G_loss_B
             Generator_loss.backward()
+            if self.is_parallel:
+                self.disGA.apply_collective_grads()
+                self.disGB.apply_collective_grads()
+                self.disLA.apply_collective_grads()
+                self.disLB.apply_collective_grads()
+                self.genA2B.apply_collective_grads()
+                self.genB2A.apply_collective_grads()
             self.G_optim.minimize(Generator_loss)
 
             # clip parameter of AdaILN and ILN, applied after optimizer step
