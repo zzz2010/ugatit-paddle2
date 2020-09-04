@@ -47,11 +47,6 @@ def check_args(args):
     check_folder(os.path.join(args.result_dir, args.dataset, 'img'))
     check_folder(os.path.join(args.result_dir, args.dataset, 'test'))
 
-    # --epoch
-    try:
-        assert args.epoch >= 1
-    except:
-        print('number of epochs must be larger than or equal to one')
 
     # --batch_size
     try:
