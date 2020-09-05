@@ -72,6 +72,8 @@ def main():
     with fluid.dygraph.guard(place=place):
         if args.parallel:
             args.strategy=fluid.dygraph.parallel.prepare_context()
+        else:
+            args.strategy=None
         gan = UGATIT(args)
 
         # build graph
