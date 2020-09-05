@@ -430,12 +430,12 @@ class UGATIT(object) :
 
     def load(self, dir, step):
         params = torch.load(os.path.join(dir, self.dataset + '_params_%07d.pt' % step))
-        self.genA2B.load_state_dict(params['genA2B'])
-        self.genB2A.load_state_dict(params['genB2A'])
-        self.disGA.load_state_dict(params['disGA'])
-        self.disGB.load_state_dict(params['disGB'])
-        self.disLA.load_state_dict(params['disLA'])
-        self.disLB.load_state_dict(params['disLB'])
+        self.genA2B.set_dict(params['genA2B'])
+        self.genB2A.set_dict(params['genB2A'])
+        self.disGA.set_dict(params['disGA'])
+        self.disGB.set_dict(params['disGB'])
+        self.disLA.set_dict(params['disLA'])
+        self.disLB.set_dict(params['disLB'])
 
     def test(self):
         model_list = glob(os.path.join(self.result_dir, self.dataset, 'model', '*.pt'))
