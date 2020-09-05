@@ -14,11 +14,10 @@ class UGATIT(object) :
     def __init__(self, args):
         self.light = args.light
         self.is_parallel=args.parallel
-        if self.is_parallel:
-            self.strategy=fluid.dygraph.prepare_context()
-            if self.strategy is None:
-                print("Parallel not success,change to single mode")
-                self.is_parallel=False
+        self.strategy=args.strategy
+        if self.strategy is None:
+            print("Parallel not success,change to single mode")
+            self.is_parallel=False
         if self.light :
             self.model_name = 'UGATIT_light'
         else :

@@ -70,7 +70,8 @@ def main():
         place = fluid.CPUPlace()
     #
     with fluid.dygraph.guard(place=place):
-        # open session
+        if args.parallel:
+            args.strategy=fluid.dygraph.prepare_context()
         gan = UGATIT(args)
 
         # build graph
