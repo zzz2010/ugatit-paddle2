@@ -171,8 +171,8 @@ class UGATIT(object) :
                 self.load(os.path.join(self.result_dir, self.dataset, 'model'), start_iter)
                 print(" [*] Load SUCCESS")
                 if self.decay_flag and start_iter > (self.iteration // 2):
-                    self.G_optim.param_groups[0]['lr'] -= (self.lr / (self.iteration // 2)) * (start_iter - self.iteration // 2)
-                    self.D_optim.param_groups[0]['lr'] -= (self.lr / (self.iteration // 2)) * (start_iter - self.iteration // 2)
+                    self.G_optim._learning_rate -= (self.lr / (self.iteration // 2)) * (start_iter - self.iteration // 2)
+                    self.D_optim._learning_rate -= (self.lr / (self.iteration // 2)) * (start_iter - self.iteration // 2)
 
         # training loop
         print('training start !')
