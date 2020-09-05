@@ -36,7 +36,7 @@ def merge(images, size):
 
 def check_folder(log_dir):
     if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
+        os.makedirs(log_dir,exist_ok=True)
     return log_dir
 
 def str2bool(x):
