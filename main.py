@@ -43,9 +43,10 @@ def parse_args():
 """checking arguments"""
 def check_args(args):
     # --result_dir
-    check_folder(os.path.join(args.result_dir, args.dataset, 'model'))
-    check_folder(os.path.join(args.result_dir, args.dataset, 'img'))
-    check_folder(os.path.join(args.result_dir, args.dataset, 'test'))
+
+    # check_folder(os.path.join(args.result_dir, args.dataset, 'model'))
+    # check_folder(os.path.join(args.result_dir, args.dataset, 'img'))
+    # check_folder(os.path.join(args.result_dir, args.dataset, 'test'))
 
 
     # --batch_size
