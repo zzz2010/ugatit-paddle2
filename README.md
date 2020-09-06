@@ -1,12 +1,18 @@
-## U-GAT-IT &mdash; Official PyTorch Implementation
+## U-GAT-IT &mdash;Paddle Implementation
 ### : Unsupervised Generative Attentional Networks with Adaptive Layer-Instance Normalization for Image-to-Image Translation
 
-<div align="center">
-  <img src="./assets/teaser.png">
-</div>
+This repo is derived from [Official Pytorch code](https://github.com/znxlwm/UGATIT-pytorch)
 
-### [Paper](https://arxiv.org/abs/1907.10830) | [Official Tensorflow code](https://github.com/taki0112/UGATIT)
-The results of the paper came from the **Tensorflow code**
+### Requirements
+ 
+[PaddlePaddle-gpu](https://github.com/PaddlePaddle/Paddle) 
+
+[Paddorch](https://github.com/zzz2010/paddle_torch)   (library to use paddle for torch interface)
+
+
+
+
+### [Paper](https://arxiv.org/abs/1907.10830) 
 
 
 > **U-GAT-IT: Unsupervised Generative Attentional Networks with Adaptive Layer-Instance Normalization for Image-to-Image Translation**<br>
@@ -46,29 +52,6 @@ The results of the paper came from the **Tensorflow code**
 > python main.py --dataset selfie2anime --phase test
 ```
 
-## Architecture
-<div align="center">
-  <img src = './assets/generator.png' width = '785px' height = '500px'>
-</div>
-
+ 
 ---
-
-<div align="center">
-  <img src = './assets/discriminator.png' width = '785px' height = '450px'>
-</div>
-
-## Results
-### Ablation study
-<div align="center">
-  <img src = './assets/ablation.png' width = '438px' height = '346px'>
-</div>
-
-### User study
-<div align="center">
-  <img src = './assets/user_study.png' width = '738px' height = '187px'>
-</div>
-
-### Comparison
-<div align="center">
-  <img src = './assets/kid.png' width = '787px' height = '344px'>
-</div>
+ 
